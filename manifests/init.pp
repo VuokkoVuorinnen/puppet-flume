@@ -31,6 +31,7 @@
 # === Authors
 #
 # Stas Alekseev <stas.alekseev@gmail.com>
+# Vuokko Vuorinnen
 #
 class flume(
   $ensure              = $flume::params::ensure,
@@ -90,8 +91,8 @@ class flume(
   }
 
   File {
-    owner => $elasticsearch::elasticsearch_user,
-    group => $elasticsearch::elasticsearch_group
+    owner => $flume_user,
+    group => $flume_group,
   }
 
   Exec {
@@ -102,7 +103,7 @@ class flume(
   if ( $ensure == 'present' ) {
 
     $notify_service = $restart_on_change ? {
-      true  => Service['$flume::params::service_name'],
+      true  => Service[$flume::params::service_name],
       false => undef,
     }
 
@@ -110,14 +111,14 @@ class flume(
       ensure => directory,
       mode   => '0644',
       purge  => $purge_configdir,
-      force  => $purge_configdir
+      force  => $purge_configdir,
     }
 
     file { "${configdir}/flume.conf":
       ensure  => file,
-      content => template("${module_name}/etc/flume-ng/conf/flume.conf.erb"),
+      content => template("${module_name}/flume.conf.erb"),
       mode    => '0644',
-      notify  => $notify_service
+      notify  => $notify_service,
     }
 
   } elsif ( $ensure == 'absent' ) {
@@ -125,7 +126,7 @@ class flume(
     file { $configdir:
       ensure  => 'absent',
       recurse => true,
-      force   => true
+      force   => true,
     }
 
   }
